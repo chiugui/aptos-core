@@ -210,7 +210,7 @@ Finally, each validator must specify the network address
         <b>let</b> owner_address = <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Signer.md#0x1_Signer_address_of">Signer::address_of</a>(owner);
         <b>let</b> owner_name = *<a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Vector.md#0x1_Vector_borrow">Vector::borrow</a>(&owner_names, i);
         // create each validator account and rotate its auth key <b>to</b> the correct value
-        <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account">AptosAccount::create_validator_account</a>(
+        <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account_internal">AptosAccount::create_validator_account_internal</a>(
             &core_resource_account, owner_address, owner_name
         );
 
@@ -222,7 +222,7 @@ Finally, each validator must specify the network address
         <b>let</b> operator_name = *<a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Vector.md#0x1_Vector_borrow">Vector::borrow</a>(&operator_names, i);
         // create the operator account + rotate its auth key <b>if</b> it does not already exist
         <b>if</b> (!<a href="AptosAccount.md#0x1_AptosAccount_exists_at">AptosAccount::exists_at</a>(operator_address)) {
-            <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account">AptosAccount::create_validator_operator_account</a>(
+            <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account_internal">AptosAccount::create_validator_operator_account_internal</a>(
                 &core_resource_account, operator_address, <b>copy</b> operator_name
             );
             <b>let</b> operator_auth_key = *<a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Vector.md#0x1_Vector_borrow">Vector::borrow</a>(&operator_auth_keys, i);
@@ -245,7 +245,7 @@ Finally, each validator must specify the network address
         );
 
         // finally, add this validator <b>to</b> the validator set
-        <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator">AptosValidatorSet::add_validator</a>(&core_resource_account, owner_address);
+        <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator_internal">AptosValidatorSet::add_validator_internal</a>(&core_resource_account, owner_address);
 
         i = i + 1;
     }

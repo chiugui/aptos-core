@@ -35,6 +35,10 @@ type Bytes = Vec<u8>;
 #[cfg_attr(feature = "fuzzing", derive(proptest_derive::Arbitrary))]
 #[cfg_attr(feature = "fuzzing", proptest(no_params))]
 pub enum ScriptFunctionCall {
+    AddValidator {
+        validator_addr: AccountAddress,
+    },
+
     CancelOfferScript {
         receiver: AccountAddress,
         creator: AccountAddress,
@@ -84,6 +88,18 @@ pub enum ScriptFunctionCall {
         uri: Bytes,
     },
 
+    /// Create a Validator account
+    CreateValidatorAccount {
+        new_account_address: AccountAddress,
+        human_name: Bytes,
+    },
+
+    /// Create a Validator Operator account
+    CreateValidatorOperatorAccount {
+        new_account_address: AccountAddress,
+        human_name: Bytes,
+    },
+
     /// Create delegated token for the address so the account could claim MintCapability later.
     DelegateMintCapability {
         to: AccountAddress,
@@ -100,6 +116,17 @@ pub enum ScriptFunctionCall {
         creator: AccountAddress,
         token_creation_num: u64,
         amount: u64,
+    },
+
+    RegisterValidatorConfig {
+        validator_address: AccountAddress,
+        consensus_pubkey: Bytes,
+        validator_network_addresses: Bytes,
+        fullnode_network_addresses: Bytes,
+    },
+
+    RemoveValidator {
+        validator_addr: AccountAddress,
     },
 
     /// Rotate the authentication key for the account under cap.account_address
@@ -121,6 +148,18 @@ pub enum ScriptFunctionCall {
         default_account_size: u64,
     },
 
+    SetValidatorConfigAndReconfigure {
+        validator_account: AccountAddress,
+        consensus_pubkey: Bytes,
+        validator_network_addresses: Bytes,
+        fullnode_network_addresses: Bytes,
+    },
+
+    SetValidatorOperator {
+        operator_name: Bytes,
+        operator_account: AccountAddress,
+    },
+
     /// Updates the major version to a larger version.
     SetVersion {
         major: u64,
@@ -137,6 +176,7 @@ impl ScriptFunctionCall {
     pub fn encode(self) -> TransactionPayload {
         use ScriptFunctionCall::*;
         match self {
+            AddValidator { validator_addr } => encode_add_validator_script_function(validator_addr),
             CancelOfferScript {
                 receiver,
                 creator,
@@ -191,6 +231,17 @@ impl ScriptFunctionCall {
                 name,
                 uri,
             } => encode_create_unlimited_collection_script_script_function(description, name, uri),
+            CreateValidatorAccount {
+                new_account_address,
+                human_name,
+            } => encode_create_validator_account_script_function(new_account_address, human_name),
+            CreateValidatorOperatorAccount {
+                new_account_address,
+                human_name,
+            } => encode_create_validator_operator_account_script_function(
+                new_account_address,
+                human_name,
+            ),
             DelegateMintCapability { to } => encode_delegate_mint_capability_script_function(to),
             Mint { mint_addr, amount } => encode_mint_script_function(mint_addr, amount),
             OfferScript {
@@ -199,6 +250,20 @@ impl ScriptFunctionCall {
                 token_creation_num,
                 amount,
             } => encode_offer_script_script_function(receiver, creator, token_creation_num, amount),
+            RegisterValidatorConfig {
+                validator_address,
+                consensus_pubkey,
+                validator_network_addresses,
+                fullnode_network_addresses,
+            } => encode_register_validator_config_script_function(
+                validator_address,
+                consensus_pubkey,
+                validator_network_addresses,
+                fullnode_network_addresses,
+            ),
+            RemoveValidator { validator_addr } => {
+                encode_remove_validator_script_function(validator_addr)
+            }
             RotateAuthenticationKey {
                 new_authentication_key,
             } => encode_rotate_authentication_key_script_function(new_authentication_key),
@@ -227,6 +292,21 @@ impl ScriptFunctionCall {
                 gas_unit_scaling_factor,
                 default_account_size,
             ),
+            SetValidatorConfigAndReconfigure {
+                validator_account,
+                consensus_pubkey,
+                validator_network_addresses,
+                fullnode_network_addresses,
+            } => encode_set_validator_config_and_reconfigure_script_function(
+                validator_account,
+                consensus_pubkey,
+                validator_network_addresses,
+                fullnode_network_addresses,
+            ),
+            SetValidatorOperator {
+                operator_name,
+                operator_account,
+            } => encode_set_validator_operator_script_function(operator_name, operator_account),
             SetVersion { major } => encode_set_version_script_function(major),
             Transfer { to, amount } => encode_transfer_script_function(to, amount),
         }
@@ -247,6 +327,21 @@ impl ScriptFunctionCall {
             None
         }
     }
+}
+
+pub fn encode_add_validator_script_function(validator_addr: AccountAddress) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosValidatorSet").to_owned(),
+        ),
+        ident_str!("add_validator").to_owned(),
+        vec![],
+        vec![bcs::to_bytes(&validator_addr).unwrap()],
+    ))
 }
 
 pub fn encode_cancel_offer_script_script_function(
@@ -429,6 +524,50 @@ pub fn encode_create_unlimited_collection_script_script_function(
     ))
 }
 
+/// Create a Validator account
+pub fn encode_create_validator_account_script_function(
+    new_account_address: AccountAddress,
+    human_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosAccount").to_owned(),
+        ),
+        ident_str!("create_validator_account").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&new_account_address).unwrap(),
+            bcs::to_bytes(&human_name).unwrap(),
+        ],
+    ))
+}
+
+/// Create a Validator Operator account
+pub fn encode_create_validator_operator_account_script_function(
+    new_account_address: AccountAddress,
+    human_name: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosAccount").to_owned(),
+        ),
+        ident_str!("create_validator_operator_account").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&new_account_address).unwrap(),
+            bcs::to_bytes(&human_name).unwrap(),
+        ],
+    ))
+}
+
 /// Create delegated token for the address so the account could claim MintCapability later.
 pub fn encode_delegate_mint_capability_script_function(to: AccountAddress) -> TransactionPayload {
     TransactionPayload::ScriptFunction(ScriptFunction::new(
@@ -489,6 +628,48 @@ pub fn encode_offer_script_script_function(
     ))
 }
 
+pub fn encode_register_validator_config_script_function(
+    validator_address: AccountAddress,
+    consensus_pubkey: Vec<u8>,
+    validator_network_addresses: Vec<u8>,
+    fullnode_network_addresses: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosValidatorConfig").to_owned(),
+        ),
+        ident_str!("register_validator_config").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&validator_address).unwrap(),
+            bcs::to_bytes(&consensus_pubkey).unwrap(),
+            bcs::to_bytes(&validator_network_addresses).unwrap(),
+            bcs::to_bytes(&fullnode_network_addresses).unwrap(),
+        ],
+    ))
+}
+
+pub fn encode_remove_validator_script_function(
+    validator_addr: AccountAddress,
+) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosValidatorSet").to_owned(),
+        ),
+        ident_str!("remove_validator").to_owned(),
+        vec![],
+        vec![bcs::to_bytes(&validator_addr).unwrap()],
+    ))
+}
+
 /// Rotate the authentication key for the account under cap.account_address
 pub fn encode_rotate_authentication_key_script_function(
     new_authentication_key: Vec<u8>,
@@ -546,6 +727,52 @@ pub fn encode_set_gas_constants_script_function(
     ))
 }
 
+pub fn encode_set_validator_config_and_reconfigure_script_function(
+    validator_account: AccountAddress,
+    consensus_pubkey: Vec<u8>,
+    validator_network_addresses: Vec<u8>,
+    fullnode_network_addresses: Vec<u8>,
+) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosValidatorConfig").to_owned(),
+        ),
+        ident_str!("set_validator_config_and_reconfigure").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&validator_account).unwrap(),
+            bcs::to_bytes(&consensus_pubkey).unwrap(),
+            bcs::to_bytes(&validator_network_addresses).unwrap(),
+            bcs::to_bytes(&fullnode_network_addresses).unwrap(),
+        ],
+    ))
+}
+
+pub fn encode_set_validator_operator_script_function(
+    operator_name: Vec<u8>,
+    operator_account: AccountAddress,
+) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("AptosValidatorConfig").to_owned(),
+        ),
+        ident_str!("set_validator_operator").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&operator_name).unwrap(),
+            bcs::to_bytes(&operator_account).unwrap(),
+        ],
+    ))
+}
+
 /// Updates the major version to a larger version.
 pub fn encode_set_version_script_function(major: u64) -> TransactionPayload {
     TransactionPayload::ScriptFunction(ScriptFunction::new(
@@ -575,6 +802,18 @@ pub fn encode_transfer_script_function(to: AccountAddress, amount: u64) -> Trans
         vec![],
         vec![bcs::to_bytes(&to).unwrap(), bcs::to_bytes(&amount).unwrap()],
     ))
+}
+
+fn decode_add_validator_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::AddValidator {
+            validator_addr: bcs::from_bytes(script.args().get(0)?).ok()?,
+        })
+    } else {
+        None
+    }
 }
 
 fn decode_cancel_offer_script_script_function(
@@ -686,6 +925,32 @@ fn decode_create_unlimited_collection_script_script_function(
     }
 }
 
+fn decode_create_validator_account_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::CreateValidatorAccount {
+            new_account_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+            human_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
+fn decode_create_validator_operator_account_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::CreateValidatorOperatorAccount {
+            new_account_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+            human_name: bcs::from_bytes(script.args().get(1)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
 fn decode_delegate_mint_capability_script_function(
     payload: &TransactionPayload,
 ) -> Option<ScriptFunctionCall> {
@@ -716,6 +981,33 @@ fn decode_offer_script_script_function(payload: &TransactionPayload) -> Option<S
             creator: bcs::from_bytes(script.args().get(1)?).ok()?,
             token_creation_num: bcs::from_bytes(script.args().get(2)?).ok()?,
             amount: bcs::from_bytes(script.args().get(3)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
+fn decode_register_validator_config_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::RegisterValidatorConfig {
+            validator_address: bcs::from_bytes(script.args().get(0)?).ok()?,
+            consensus_pubkey: bcs::from_bytes(script.args().get(1)?).ok()?,
+            validator_network_addresses: bcs::from_bytes(script.args().get(2)?).ok()?,
+            fullnode_network_addresses: bcs::from_bytes(script.args().get(3)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
+fn decode_remove_validator_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::RemoveValidator {
+            validator_addr: bcs::from_bytes(script.args().get(0)?).ok()?,
         })
     } else {
         None
@@ -756,6 +1048,34 @@ fn decode_set_gas_constants_script_function(
     }
 }
 
+fn decode_set_validator_config_and_reconfigure_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::SetValidatorConfigAndReconfigure {
+            validator_account: bcs::from_bytes(script.args().get(0)?).ok()?,
+            consensus_pubkey: bcs::from_bytes(script.args().get(1)?).ok()?,
+            validator_network_addresses: bcs::from_bytes(script.args().get(2)?).ok()?,
+            fullnode_network_addresses: bcs::from_bytes(script.args().get(3)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
+fn decode_set_validator_operator_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::SetValidatorOperator {
+            operator_name: bcs::from_bytes(script.args().get(0)?).ok()?,
+            operator_account: bcs::from_bytes(script.args().get(1)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
 fn decode_set_version_script_function(payload: &TransactionPayload) -> Option<ScriptFunctionCall> {
     if let TransactionPayload::ScriptFunction(script) = payload {
         Some(ScriptFunctionCall::SetVersion {
@@ -790,6 +1110,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<ScriptFunctionDecoderM
     once_cell::sync::Lazy::new(|| {
         let mut map: ScriptFunctionDecoderMap = std::collections::HashMap::new();
         map.insert(
+            "AptosValidatorSetadd_validator".to_string(),
+            Box::new(decode_add_validator_script_function),
+        );
+        map.insert(
             "TokenTransferscancel_offer_script".to_string(),
             Box::new(decode_cancel_offer_script_script_function),
         );
@@ -822,6 +1146,14 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<ScriptFunctionDecoderM
             Box::new(decode_create_unlimited_collection_script_script_function),
         );
         map.insert(
+            "AptosAccountcreate_validator_account".to_string(),
+            Box::new(decode_create_validator_account_script_function),
+        );
+        map.insert(
+            "AptosAccountcreate_validator_operator_account".to_string(),
+            Box::new(decode_create_validator_operator_account_script_function),
+        );
+        map.insert(
             "TestCoindelegate_mint_capability".to_string(),
             Box::new(decode_delegate_mint_capability_script_function),
         );
@@ -834,12 +1166,28 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<ScriptFunctionDecoderM
             Box::new(decode_offer_script_script_function),
         );
         map.insert(
+            "AptosValidatorConfigregister_validator_config".to_string(),
+            Box::new(decode_register_validator_config_script_function),
+        );
+        map.insert(
+            "AptosValidatorSetremove_validator".to_string(),
+            Box::new(decode_remove_validator_script_function),
+        );
+        map.insert(
             "AptosAccountrotate_authentication_key".to_string(),
             Box::new(decode_rotate_authentication_key_script_function),
         );
         map.insert(
             "AptosVMConfigset_gas_constants".to_string(),
             Box::new(decode_set_gas_constants_script_function),
+        );
+        map.insert(
+            "AptosValidatorConfigset_validator_config_and_reconfigure".to_string(),
+            Box::new(decode_set_validator_config_and_reconfigure_script_function),
+        );
+        map.insert(
+            "AptosValidatorConfigset_validator_operator".to_string(),
+            Box::new(decode_set_validator_operator_script_function),
         );
         map.insert(
             "AptosVersionset_version".to_string(),

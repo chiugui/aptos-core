@@ -8,6 +8,7 @@
 -  [Function `initialize_validator_set`](#0x1_AptosValidatorSet_initialize_validator_set)
 -  [Function `add_validator`](#0x1_AptosValidatorSet_add_validator)
 -  [Function `remove_validator`](#0x1_AptosValidatorSet_remove_validator)
+-  [Function `add_validator_internal`](#0x1_AptosValidatorSet_add_validator_internal)
 
 
 <pre><code><b>use</b> <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Capability.md#0x1_Capability">0x1::Capability</a>;
@@ -49,7 +50,7 @@
 
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator">add_validator</a>(account: &signer, validator_addr: <b>address</b>)
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator">add_validator</a>(account: signer, validator_addr: <b>address</b>)
 </code></pre>
 
 
@@ -58,14 +59,11 @@
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator">add_validator</a>(
-    account: &signer,
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator">add_validator</a>(
+    account: signer,
     validator_addr: <b>address</b>,
 ) {
-    <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/CoreFramework/docs/ValidatorSystem.md#0x1_ValidatorSystem_add_validator">ValidatorSystem::add_validator</a>(
-        validator_addr,
-        <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Capability.md#0x1_Capability_acquire">Capability::acquire</a>(account, &<a href="Marker.md#0x1_Marker_get">Marker::get</a>())
-    );
+    <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator_internal">add_validator_internal</a>(&account, validator_addr);
 }
 </code></pre>
 
@@ -79,7 +77,7 @@
 
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_remove_validator">remove_validator</a>(account: &signer, validator_addr: <b>address</b>)
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_remove_validator">remove_validator</a>(account: signer, validator_addr: <b>address</b>)
 </code></pre>
 
 
@@ -88,11 +86,41 @@
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_remove_validator">remove_validator</a>(
-    account: &signer,
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_remove_validator">remove_validator</a>(
+    account: signer,
     validator_addr: <b>address</b>,
 ) {
     <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/CoreFramework/docs/ValidatorSystem.md#0x1_ValidatorSystem_remove_validator">ValidatorSystem::remove_validator</a>(
+        validator_addr,
+        <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Capability.md#0x1_Capability_acquire">Capability::acquire</a>(&account, &<a href="Marker.md#0x1_Marker_get">Marker::get</a>())
+    );
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x1_AptosValidatorSet_add_validator_internal"></a>
+
+## Function `add_validator_internal`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator_internal">add_validator_internal</a>(account: &signer, validator_addr: <b>address</b>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="AptosValidatorSet.md#0x1_AptosValidatorSet_add_validator_internal">add_validator_internal</a>(
+    account: &signer,
+    validator_addr: <b>address</b>,
+) {
+    <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/CoreFramework/docs/ValidatorSystem.md#0x1_ValidatorSystem_add_validator">ValidatorSystem::add_validator</a>(
         validator_addr,
         <a href="../../../../../../../aptos-framework/releases/artifacts/current/build/MoveStdlib/docs/Capability.md#0x1_Capability_acquire">Capability::acquire</a>(account, &<a href="Marker.md#0x1_Marker_get">Marker::get</a>())
     );

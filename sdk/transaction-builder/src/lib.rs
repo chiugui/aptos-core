@@ -5,4 +5,3 @@
 
 pub mod aptos_stdlib;
 pub mod error_explain;
-pub mod stdlib;

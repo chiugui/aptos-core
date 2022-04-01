@@ -15,7 +15,9 @@ transaction in addition to the core prologue and epilogue.
 -  [Function `create_account`](#0x1_AptosAccount_create_account)
 -  [Function `exists_at`](#0x1_AptosAccount_exists_at)
 -  [Function `create_validator_account`](#0x1_AptosAccount_create_validator_account)
+-  [Function `create_validator_account_internal`](#0x1_AptosAccount_create_validator_account_internal)
 -  [Function `create_validator_operator_account`](#0x1_AptosAccount_create_validator_operator_account)
+-  [Function `create_validator_operator_account_internal`](#0x1_AptosAccount_create_validator_operator_account_internal)
 -  [Function `rotate_authentication_key`](#0x1_AptosAccount_rotate_authentication_key)
 -  [Function `rotate_authentication_key_internal`](#0x1_AptosAccount_rotate_authentication_key_internal)
 -  [Function `module_prologue`](#0x1_AptosAccount_module_prologue)
@@ -331,7 +333,7 @@ Basic account creation method.
 Create a Validator account
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account">create_validator_account</a>(core_resource: &signer, new_account_address: <b>address</b>, human_name: vector&lt;u8&gt;)
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account">create_validator_account</a>(core_resource: signer, new_account_address: <b>address</b>, human_name: vector&lt;u8&gt;)
 </code></pre>
 
 
@@ -340,7 +342,35 @@ Create a Validator account
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account">create_validator_account</a>(
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account">create_validator_account</a>(
+    core_resource: signer,
+    new_account_address: <b>address</b>,
+    human_name: vector&lt;u8&gt;,
+) {
+    <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account_internal">create_validator_account_internal</a>(&core_resource, new_account_address, human_name);
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x1_AptosAccount_create_validator_account_internal"></a>
+
+## Function `create_validator_account_internal`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account_internal">create_validator_account_internal</a>(core_resource: &signer, new_account_address: <b>address</b>, human_name: vector&lt;u8&gt;)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_account_internal">create_validator_account_internal</a>(
     core_resource: &signer,
     new_account_address: <b>address</b>,
     human_name: vector&lt;u8&gt;,
@@ -361,7 +391,7 @@ Create a Validator account
 Create a Validator Operator account
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account">create_validator_operator_account</a>(core_resource: &signer, new_account_address: <b>address</b>, human_name: vector&lt;u8&gt;)
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account">create_validator_operator_account</a>(core_resource: signer, new_account_address: <b>address</b>, human_name: vector&lt;u8&gt;)
 </code></pre>
 
 
@@ -370,7 +400,35 @@ Create a Validator Operator account
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account">create_validator_operator_account</a>(
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account">create_validator_operator_account</a>(
+    core_resource: signer,
+    new_account_address: <b>address</b>,
+    human_name: vector&lt;u8&gt;,
+) {
+    <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account_internal">create_validator_operator_account_internal</a>(&core_resource, new_account_address, human_name)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x1_AptosAccount_create_validator_operator_account_internal"></a>
+
+## Function `create_validator_operator_account_internal`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account_internal">create_validator_operator_account_internal</a>(core_resource: &signer, new_account_address: <b>address</b>, human_name: vector&lt;u8&gt;)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="AptosAccount.md#0x1_AptosAccount_create_validator_operator_account_internal">create_validator_operator_account_internal</a>(
     core_resource: &signer,
     new_account_address: <b>address</b>,
     human_name: vector&lt;u8&gt;,

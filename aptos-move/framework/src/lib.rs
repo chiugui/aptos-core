@@ -18,10 +18,8 @@ pub mod natives;
 pub mod release;
 
 const CORE_MODULES_DIR: &str = "core/sources";
-const DPN_MODULES_DIR: &str = "DPN/sources";
 const APTOS_MODULES_DIR: &str = "aptos-framework/sources";
 
-static DPN_FRAMEWORK_PKG: Lazy<CompiledPackage> = Lazy::new(|| package("DPN"));
 static APTOS_FRAMEWORK_PKG: Lazy<CompiledPackage> = Lazy::new(|| package("aptos-framework"));
 
 pub fn path_in_crate<S>(relative: S) -> PathBuf
@@ -37,22 +35,8 @@ pub fn core_modules_full_path() -> String {
     format!("{}/{}", env!("CARGO_MANIFEST_DIR"), CORE_MODULES_DIR)
 }
 
-pub fn diem_payment_modules_full_path() -> String {
-    format!("{}/{}", env!("CARGO_MANIFEST_DIR"), DPN_MODULES_DIR)
-}
-
 pub fn aptos_modules_full_path() -> String {
     format!("{}/{}", env!("CARGO_MANIFEST_DIR"), APTOS_MODULES_DIR)
-}
-
-pub fn dpn_files_no_dependencies() -> Vec<String> {
-    move_files_in_path(DPN_MODULES_DIR)
-}
-
-pub fn dpn_files() -> Vec<String> {
-    let mut files = move_stdlib::move_stdlib_files();
-    files.extend(dpn_files_no_dependencies());
-    files
 }
 
 pub fn aptos_files_no_dependencies() -> Vec<String> {
@@ -70,10 +54,6 @@ pub fn aptos_files() -> Vec<String> {
     let mut files = move_stdlib::move_stdlib_files();
     files.extend(aptos_files_no_dependencies());
     files
-}
-
-pub fn diem_framework_named_addresses() -> BTreeMap<String, NumericalAddress> {
-    named_addresses(&*DPN_FRAMEWORK_PKG)
 }
 
 pub fn aptos_framework_named_addresses() -> BTreeMap<String, NumericalAddress> {
@@ -103,17 +83,6 @@ fn package(name: &str) -> CompiledPackage {
         .unwrap()
 }
 
-pub fn dpn_modules() -> Vec<CompiledModule> {
-    DPN_FRAMEWORK_PKG
-        .transitive_compiled_units()
-        .iter()
-        .filter_map(|unit| match unit {
-            CompiledUnit::Module(NamedCompiledModule { module, .. }) => Some(module.clone()),
-            CompiledUnit::Script(_) => None,
-        })
-        .collect()
-}
-
 fn module_blobs(pkg: &CompiledPackage) -> Vec<Vec<u8>> {
     pkg.transitive_compiled_units()
         .iter()
@@ -128,10 +97,17 @@ fn module_blobs(pkg: &CompiledPackage) -> Vec<Vec<u8>> {
         .collect()
 }
 
-pub fn dpn_module_blobs() -> Vec<Vec<u8>> {
-    module_blobs(&*DPN_FRAMEWORK_PKG)
-}
-
 pub fn aptos_module_blobs() -> Vec<Vec<u8>> {
     module_blobs(&*APTOS_FRAMEWORK_PKG)
+}
+
+pub fn aptos_modules() -> Vec<CompiledModule> {
+    APTOS_FRAMEWORK_PKG
+        .transitive_compiled_units()
+        .iter()
+        .filter_map(|unit| match unit {
+            CompiledUnit::Module(NamedCompiledModule { module, .. }) => Some(module.clone()),
+            CompiledUnit::Script(_) => None,
+        })
+        .collect()
 }
